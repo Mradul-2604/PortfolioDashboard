@@ -41,19 +41,20 @@ The application is meant for demonstration and portfolio analytics purposes, ser
 The application follows a clean client-server architecture with the backend acting as a data aggregation and calculation layer.
 
 ```mermaid
-graph TD
+flowchart TD
     A[Frontend Dashboard] -->|GET /api/portfolio| B[REST API]
     B --> C[Node.js Backend]
-    C -->|Reads Static Data| J[portfolio.json (Normalized from Excel)]
-    C --> D[Market Data Service]
-    
-    D -->|Concurrent Requests| E[Yahoo Finance]
-    D -->|Concurrent Requests| F[Google Finance]
-    
-    D --> G[In-Memory Cache]
-    G --> H[Calculation Service]
-    H --> I[JSON Response]
-    I -->|Parsed Data| A
+    C --> D[Portfolio Data]
+    D --> E[Market Data Service]
+    E --> F[Yahoo Finance]
+    E --> G[Google Finance]
+    E --> H[In-Memory Cache]
+    E --> I[Calculation Service]
+    I --> J[Sector Aggregation]
+    I --> K[Portfolio Summary]
+    J --> L[JSON Response]
+    K --> L
+    L --> A
 ```
 
 - **Frontend**: Responsible exclusively for presentation, periodic polling, and state management (loading/error handling).
@@ -88,7 +89,7 @@ The primary endpoint that returns the fully enriched portfolio data.
 - `data.marketDataStatus`: High-level indicator (`success`, `partial`, `failed`) of the external provider health.
 - `data.lastUpdated`: ISO timestamp of the response generation.
 
-**Example Response**:
+**Illustrative Response**:
 ```json
 {
   "success": true,
@@ -152,9 +153,9 @@ Sector totals are calculated by summing the `investment`, `presentValue`, and `g
 
 Neither Yahoo Finance nor Google Finance provide an official, public API intended for free high-frequency programmatic use. To satisfy the case study:
 
-- **Yahoo Finance** (`yahoo-finance2` library): Used strictly for the **CMP**.
-- **Google Finance** (Custom HTML scraping): Treated as the primary source for the **P/E Ratio** and **Latest Earnings (EPS)**.
-- **Fallback Behavior**: If the Google Finance scraper fails to extract P/E or EPS due to layout changes or missing data, the backend automatically falls back to Yahoo Finance's `trailingPE` and `epsTrailingTwelveMonths`.
+- **Yahoo Finance** (`yahoo-finance2` library): Primary source for CMP and fallback source for P/E and EPS when Google Finance data is unavailable.
+- **Google Finance** (Custom HTML scraping): Primary source for P/E Ratio and Latest Earnings (EPS).
+- **Fallback Behavior**: If Google Finance scraping fails or returns incomplete data, Yahoo Finance provides fallback P/E/EPS values where available.
 - **Partial Failure**: If a metric cannot be found on either provider, it safely resolves to `null`, and the provider status is marked as `partial`.
 
 *Note: Because Google Finance relies on DOM scraping, structural changes to Google's HTML may affect extraction accuracy over time.*
@@ -185,16 +186,19 @@ The application is designed to be highly fault-tolerant:
 ```text
 8Byte/
 ├── backend/
+│   ├── api/
+│   │   └── index.ts          # Vercel serverless entry point
+│   ├── data/
+│   │   └── portfolio.json    # Normalized portfolio data from provided Excel sheet
 │   ├── src/
 │   │   ├── controllers/      # Express route handlers
 │   │   ├── providers/        # Yahoo and Google integration logic
 │   │   ├── services/         # Market data fetching and calculations
 │   │   ├── types/            # TypeScript interfaces
-│   │   ├── utils/            # Cache, Logger, Math utilities
-│   │   └── data/
-│   │       └── portfolio.json # Normalized portfolio data from provided Excel sheet
+│   │   └── utils/            # Cache, Logger, Math utilities
 │   ├── package.json
 │   ├── tsconfig.json
+│   ├── vercel.json           # Vercel deployment configuration
 │   └── .env.example
 ├── frontend/
 │   ├── src/
@@ -204,7 +208,6 @@ The application is designed to be highly fault-tolerant:
 │   │   ├── lib/              # API fetch and formatting utilities
 │   │   └── types/            # Shared interfaces mirroring backend
 │   ├── package.json
-│   ├── tailwind.config.ts
 │   └── .env.local
 └── README.md
 ```
@@ -225,9 +228,16 @@ The backend uses default environment variables that work out of the box (`PORT=5
 cd frontend
 npm install
 ```
-A `.env.local` file is already generated with `NEXT_PUBLIC_API_URL=http://localhost:5000` to connect to the backend.
+Local environment files like `.env.local` are intentionally ignored by git. You should configure environment variables locally or through Vercel project settings. For local development, create a `.env.local` with `NEXT_PUBLIC_API_URL=http://localhost:5000` to connect to the backend.
 
-## 14. Running the Application
+## 14. Deployment
+
+Both the frontend and backend are fully configured for Vercel deployment.
+
+- **Backend**: Deployable directly from the `backend` root directory. The `backend/api/index.ts` serves as the Vercel serverless entry point, while `backend/vercel.json` handles routing and explicitly includes `portfolio.json` in the bundle.
+- **Frontend**: Deployable directly from the `frontend` root directory. Ensure you set the `NEXT_PUBLIC_API_URL` environment variable in your Vercel project settings to point to your deployed backend URL.
+
+## 15. Running the Application
 
 Both the backend and frontend must be running concurrently.
 
@@ -245,9 +255,9 @@ npm run dev
 ```
 The Dashboard UI will be available at: `http://localhost:3000`
 
-## 15. Testing
+## 16. Testing
 
-The backend is heavily tested with full coverage of the calculation logic, data validation, and provider mocking.
+The backend is covered by automated tests for calculation logic, caching, provider behavior, error handling, and API integration.
 
 **Run Backend Tests**:
 ```bash
@@ -261,12 +271,11 @@ npm run build
 **Run Frontend Verification**:
 ```bash
 cd frontend
-npm run typecheck
 npm run build
 ```
-*Result*: Clean compilation and successful static Next.js production build.
+*Result*: Clean compilation and successful static Next.js production build (Next.js automatically performs TypeScript checking during the build).
 
-## 16. Design and UX
+## 17. Design and UX
 
 The frontend was modeled using Google Stitch and implemented accurately in React + Tailwind CSS:
 - **Single-page dashboard**: Clean, vertical layout requiring no complex navigation.
@@ -276,26 +285,26 @@ The frontend was modeled using Google Stitch and implemented accurately in React
 - **Visual indicators**: Text dynamically turns green (`text-emerald-600`) or red (`text-rose-600`) based on gain/loss value.
 - **Responsive layout**: Fully functional on mobile, tablet, and desktop screens.
 
-## 17. Technical Challenges and Solutions
+## 18. Technical Challenges and Solutions
 
 - **Unofficial Data Sources**: Handled gracefully by using `Promise.allSettled`, robust Regex string cleaning (removing `₹`, commas), and creating a multi-tiered fallback system.
-- **Rate Limiting & Performance**: Mitigated by a 60-second in-memory TTL cache, dropping external requests from 4 times a minute per user to 1 time a minute globally.
+- **Rate Limiting & Performance**: Mitigated by a 60-second in-memory TTL cache. This reduces repeated external requests for cached symbols and allows 15-second frontend polling without fetching fresh provider data on every poll.
 - **Partial Data**: Solved at the TypeScript layer by strictly enforcing `number | null` across the Calculation Service and Frontend, ensuring zero runtime crashes from missing provider data.
 - **Periodic Updates**: Handled efficiently on the client via a custom `usePortfolio` React hook relying on standard `setInterval` polling with proper `useEffect` cleanup.
 
-## 18. Limitations
+## 19. Limitations
 
 - **Unofficial Integration**: Yahoo Finance and Google Finance integrations rely on unofficial library wrappers and direct DOM scraping. Structural updates to Google's website will break the EPS/PE extraction logic.
 - **Market Data Availability**: Niche BSE stocks or newly listed equities may not resolve accurately on external providers, leading to partial data rendering.
 - **Not for Trading**: This is strictly a read-only portfolio analytics visualization dashboard, not a high-frequency trading or execution system.
 
-## 19. Future Improvements
+## 20. Future Improvements
 
 - **WebSocket/SSE**: Replace 15-second polling with Server-Sent Events (SSE) or WebSockets for true push-based reactivity.
 - **Persistent Cache**: Upgrade the in-memory cache to Redis to maintain state across backend server restarts.
 - **Database Integration**: Migrate `portfolio.json` to a PostgreSQL or MongoDB instance to allow users to dynamically add/remove holdings.
 - **Historical Charts**: Implement Recharts or Chart.js to visualize portfolio growth over a 1Y or 5Y historical window.
 
-## 20. Disclaimer
+## 21. Disclaimer
 
 *Market data provided in this dashboard may be delayed, incomplete, or unavailable depending on the health of third-party external providers. This application is constructed strictly for demonstration and technical evaluation purposes. It does not constitute financial advice.*
