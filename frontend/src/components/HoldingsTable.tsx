@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { SectorSummary, EnrichedHolding } from "../types/portfolio";
 import { formatINR, formatPercentage, getTextColorForValue } from "../lib/utils";
 
@@ -84,15 +84,32 @@ function HoldingRow({ holding, maxInvestment }: { holding: EnrichedHolding, maxI
 
 export function HoldingsTable({ sectors, totalHoldings }: HoldingsTableProps) {
   // Find maximum investment for the visual bar relative width
-  let maxInvestment = 0;
-  sectors.forEach(s => {
-    s.holdings.forEach(h => {
-      if (h.investment > maxInvestment) maxInvestment = h.investment;
+  const maxInvestment = useMemo(() => {
+    let max = 0;
+    sectors.forEach(s => {
+      s.holdings.forEach(h => {
+        if (h.investment > max) max = h.investment;
+      });
     });
-  });
+    return max;
+  }, [sectors]);
 
   // Sort sectors by portfolioPercentage descending
-  const sortedSectors = [...sectors].sort((a, b) => b.portfolioPercentage - a.portfolioPercentage);
+  const sortedSectors = useMemo(
+    () => [...sectors].sort((a, b) => b.portfolioPercentage - a.portfolioPercentage),
+    [sectors]
+  );
+
+  // Group and sort holdings within each sector by portfolioPercentage descending
+  const sortedHoldingsBySector = useMemo(() => {
+    const map: Record<string, EnrichedHolding[]> = {};
+    for (const sector of sectors) {
+      map[sector.name] = [...sector.holdings].sort(
+        (a, b) => b.portfolioPercentage - a.portfolioPercentage
+      );
+    }
+    return map;
+  }, [sectors]);
 
   return (
     <section className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
@@ -127,8 +144,8 @@ export function HoldingsTable({ sectors, totalHoldings }: HoldingsTableProps) {
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-800">
             {sortedSectors.map((sector) => {
-              // Sort holdings within sector by portfolioPercentage
-              const sortedHoldings = [...sector.holdings].sort((a, b) => b.portfolioPercentage - a.portfolioPercentage);
+              // Retrieve memoized sorted holdings for this sector
+              const sortedHoldings = sortedHoldingsBySector[sector.name] || sector.holdings;
               const sectorColorClass = getSectorColor(sector.name);
               
               return (

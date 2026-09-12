@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { SectorSummary } from "../types/portfolio";
 import { formatINR } from "../lib/utils";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
@@ -79,8 +79,14 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export function SectorAllocation({ sectors }: SectorAllocationProps) {
   // Sort sectors by portfolioPercentage descending
-  const sortedSectors = [...sectors].sort((a, b) => b.portfolioPercentage - a.portfolioPercentage);
-  const dataForChart = sortedSectors.filter(s => s.portfolioPercentage > 0);
+  const sortedSectors = useMemo(
+    () => [...sectors].sort((a, b) => b.portfolioPercentage - a.portfolioPercentage),
+    [sectors]
+  );
+  const dataForChart = useMemo(
+    () => sortedSectors.filter((s) => s.portfolioPercentage > 0),
+    [sortedSectors]
+  );
 
   return (
     <section className="bg-white border border-slate-200 rounded-lg shadow-xs p-5">
