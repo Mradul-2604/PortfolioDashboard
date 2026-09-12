@@ -1,310 +1,397 @@
 # Dynamic Portfolio Dashboard
 
-## 1. Overview
-The Dynamic Portfolio Dashboard is a full-stack web application built to fulfill the case study requirements for a portfolio analytics and visualization platform. It provides consolidated equity valuation, sector allocations, and mark-to-market performance insights by combining holding data normalized from the provided case-study Excel sheet with live market metrics scraped from external financial data providers. 
+A modern, production-ready portfolio analytics and valuation web application built for Indian equity holdings. The dashboard combines static portfolio holdings from an authoritative Excel dataset with real-time market metrics dynamically fetched from financial data providers, delivering mark-to-market valuations, sector allocations, and performance insights.
 
-The application is meant for demonstration and portfolio analytics purposes, serving as a reliable read-only view of investments.
+Built using:
+- **Next.js / React**
+- **TypeScript**
+- **Tailwind CSS**
+- **Node.js / Express**
+- **Yahoo Finance**
+- **Google Finance**
+- **Recharts**
 
-## 2. Features
-- **Portfolio summary**: High-level KPIs at a glance.
-  - Total Investment (Cost basis)
-  - Present Value (Today's mark-to-market value)
-  - Total Gain/Loss (Absolute value)
-  - Overall Return (Percentage gain/loss)
-- **Sector-wise grouping**: Dynamic aggregation of holdings by industry sectors.
-  - Sector investment, present value, and gain/loss metrics.
-- **Holdings table**: Detailed tabular breakdown of all portfolio assets.
-  - Purchase Price, Quantity, Investment
-  - Portfolio % (allocation weight)
-  - NSE/BSE exchange tag
-  - CMP (Current Market Price)
-  - P/E Ratio
-  - Latest Earnings (EPS)
-- **Visual indicators**: Intuitive green/red text for positive/negative gains.
-- **Real-time updates**: Automatic UI polling every 15 seconds.
-- **Manual refresh**: Interactive refresh button for immediate updates.
-- **Resilient UI**: Professional loading state skeletons and error state fallbacks.
-- **Partial-data handling**: The application gracefully continues rendering even if some market data fields (like EPS or P/E) are unavailable.
-- **Responsive design**: Tailwind-powered mobile, tablet, and desktop views.
+---
 
-## 3. Tech Stack
+## Features
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend** | Next.js (16.3.4), React (19.2.8), TypeScript, Tailwind CSS (v4) |
-| **Backend** | Node.js, Express, TypeScript |
-| **Data Providers** | Yahoo Finance (`yahoo-finance2`), Google Finance (Custom Scraper with `axios`) |
-| **Other** | REST API, In-memory TTL caching, Jest (`jest`, `supertest`) |
+- **26 Active Portfolio Holdings**: Accurately tracks all 26 active investments from the authoritative Excel portfolio source.
+- **Portfolio Grouped by Sector**: Logical categorization across 6 distinct industry segments with sector-level sub-totals.
+- **Key Portfolio Metrics**:
+  - **Total Investment**: Consolidated capital cost basis (₹15,43,060.00).
+  - **Present Value**: Dynamic mark-to-market portfolio valuation.
+  - **Total Gain/Loss**: Absolute profit or loss in INR.
+  - **Overall Return**: Net portfolio percentage return with color indicators.
+- **Portfolio Allocation by Sector**: Interactive Recharts donut visualization and visual progress bars depicting asset distribution weights.
+- **Live Market Data**:
+  - **CMP (Current Market Price)**: Last traded prices dynamically fetched from Yahoo Finance.
+  - **P/E Ratio**: Valuation multiples scraped from Google Finance with Yahoo Finance fallback.
+  - **Latest Earnings / EPS**: Trailing 12-month earnings per share from Google Finance with Yahoo Finance fallback.
+- **Gain/Loss Color Indication**: Contextual green (`text-emerald-600`) and red (`text-rose-600`) styling for positive and negative performance.
+- **15-Second Automated Polling**: Background refresh mechanism keeping the dashboard up-to-date.
+- **Manual Refresh**: Interactive header control for immediate data reload with spinning indicator.
+- **Partial Market-Data Handling**: Resilient handling ensuring that missing metrics for an individual stock gracefully display as `"N/A"` without disrupting the rest of the portfolio.
+- **In-Memory Caching & Throttling**: Backend per-symbol TTL cache preventing rate limits and excessive provider queries.
+- **Provider Fallback**: Intelligent cascade to secondary providers if primary scrapers encounter missing fields.
+- **Dynamic Sector Totals**: Real-time aggregation of investment, present value, and gain/loss per sector.
+- **Loading & Error States**: Tailored skeleton screens during initial load and an error boundary with retry triggers if the API is unreachable.
+- **Responsive Dashboard**: Fully fluid layout optimized across mobile, tablet, and widescreen desktop monitors.
 
-## 4. Architecture
+---
 
-The application follows a clean client-server architecture with the backend acting as a data aggregation and calculation layer.
+## Technology Stack
+
+### Frontend
+- **Framework**: [Next.js](https://nextjs.org/) (v16.3.4 App Router)
+- **UI Library**: [React](https://react.dev/) (v19.2.8)
+- **Language**: [TypeScript](https://www.typescriptlang.org/) (v5)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) (v4)
+- **Visualizations**: [Recharts](https://recharts.org/) (v3.10.1)
+
+### Backend
+- **Runtime**: [Node.js](https://nodejs.org/) (v20+)
+- **Framework**: [Express](https://expressjs.com/) (v4.19.2)
+- **Language**: [TypeScript](https://www.typescriptlang.org/) (v5)
+- **HTTP Client**: [Axios](https://axios-http.com/) (v1.7.2) for Google Finance scraping
+- **Market Provider**: [`yahoo-finance2`](https://github.com/gadicc/yahoo-finance2) (v4.0.2)
+
+### Testing & Tooling
+- **Test Runner**: [Jest](https://jestjs.io/) (v29.7.0) with `ts-jest`
+- **Integration Testing**: [Supertest](https://github.com/ladjs/supertest) (v7.2.2)
+
+---
+
+## Architecture
+
+The system decouples the presentation layer from market data aggregation, caching, and financial calculations:
 
 ```mermaid
 flowchart TD
-    A[Frontend Dashboard] -->|GET /api/portfolio| B[REST API]
-    B --> C[Node.js Backend]
-    C --> D[Portfolio Data]
-    D --> E[Market Data Service]
-    E --> F[Yahoo Finance]
-    E --> G[Google Finance]
-    E --> H[In-Memory Cache]
-    E --> I[Calculation Service]
-    I --> J[Sector Aggregation]
-    I --> K[Portfolio Summary]
-    J --> L[JSON Response]
-    K --> L
-    L --> A
+    Excel["Excel Portfolio Data"] --> JSON["portfolio.json"]
+    JSON --> API["Express REST API (/api/portfolio)"]
+    API --> MDS["Market Data Service"]
+    MDS --> Cache{"In-Memory TTL Cache"}
+    Cache -- Cache Hit --> Calc["Calculation Service"]
+    Cache -- Cache Miss --> PSM["Provider Symbol Mapping Layer"]
+    PSM --> YF["Yahoo Finance (CMP)"]
+    PSM --> GF["Google Finance (P/E, EPS)"]
+    YF --> Norm["Normalized Market Data"]
+    GF --> Norm
+    Norm --> Cache
+    Norm --> Calc
+    Calc --> Resp["Enriched Portfolio JSON Response"]
+    Resp --> FE["Next.js / Recharts Dashboard"]
 ```
 
-- **Frontend**: Responsible exclusively for presentation, periodic polling, and state management (loading/error handling).
-- **Backend**: Responsible for loading the local JSON portfolio, orchestrating external market data requests concurrently, implementing fallback logic, managing the TTL cache, and performing all business logic calculations.
+### Identifier Separation
 
-## 5. Data Flow
-1. Frontend requests `/api/portfolio` on initial load.
-2. The backend loads the portfolio holdings that were normalized from the provided Excel sheet into `portfolio.json`.
-3. Backend checks its TTL cache for market data; on a miss, it concurrently requests Yahoo and Google Finance.
-4. Yahoo Finance provides the CMP (Current Market Price).
-5. Google Finance provides the P/E Ratio and Latest Earnings (EPS).
-6. Backend applies fallback logic (using Yahoo for P/E or EPS if Google scraping fails) and handles partial-data failures.
-7. Backend calculation service applies formulas to determine Investment, Present Value, Gain/Loss, and Portfolio %.
-8. Holdings are aggregated into Sector summaries.
-9. A fully structured JSON response is returned.
-10. Frontend renders the dashboard components using the enriched data.
-11. Frontend triggers an automatic background refresh approximately every 15 seconds.
+Portfolio identifiers are intentionally decoupled from third-party provider ticker symbols:
+- **Portfolio Identifiers**: Preserve the authentic exchange-assigned identifier (`HDFCBANK`, `LTIM`, `DMART`, `ASTRAL` for NSE; `532174`, `544252`, `511577` for BSE).
+- **Provider Tickers**: Formatted specifically for Yahoo Finance and Google Finance ingestion. Suffixes like `.NS` and `.BO` are strictly internal to the provider layer and are never displayed as user-facing portfolio identifiers in the table.
 
-## 6. API Documentation
+Examples:
+- **NSE**: `HDFCBANK` $\rightarrow$ Provider: `HDFCBANK.NS`
+- **BSE**: `532174` (ICICI Bank) $\rightarrow$ Provider: `ICICIBANK.BO`
+- **NSE Override**: `LTIM` (LTI Mindtree) $\rightarrow$ Provider: `LTM.NS`
+- **BSE Numeric**: `511577` (Savani Financials) $\rightarrow$ Provider: `511577.BO`
+
+---
+
+## Portfolio Data
+
+The dashboard dataset contains the **26 active holdings** from the Excel source.
+
+### Sector Distribution
+
+| Sector | Holdings Count | Cost Basis (Investment) |
+| :--- | :---: | :---: |
+| **Financial Sector** | 5 | ₹3,28,450.00 |
+| **Technology** | 6 | ₹3,37,820.00 |
+| **Consumer** | 3 | ₹2,63,565.00 |
+| **Power** | 4 | ₹1,58,860.00 |
+| **Pipe Sector** | 3 | ₹1,98,656.00 |
+| **Others** | 5 | ₹2,55,709.00 |
+| **Total** | **26** | **₹15,43,060.00** |
+
+*Note: Purchase price, quantity, investment, sector, exchange, and exchange identifier are stored as portfolio static data in `portfolio.json`. Live CMP, valuation, gain/loss, P/E, and EPS values are fetched and calculated dynamically.*
+
+---
+
+## Market Data Providers
+
+### Yahoo Finance
+- **Primary Responsibility**: Current Market Price (CMP) via `quote.regularMarketPrice`.
+- **Supplementary Data**: Serves as the automated fallback for P/E (`quote.trailingPE`) and TTM EPS (`quote.epsTrailingTwelveMonths`).
+- **Integration**: Utilizes the `yahoo-finance2` community library wrapper around Yahoo Finance endpoints.
+
+### Google Finance
+- **Primary Responsibility**: Price-to-Earnings Ratio (`P/E ratio`) and Latest Earnings (`EPS`).
+- **Integration**: Executes custom HTTP requests using `axios` with desktop browser user-agent headers, extracting structured metrics from HTML via target element regex patterns.
+
+### Provider Fallback & Graceful Degradation
+- If Google Finance fails or returns incomplete metrics for a stock, the system automatically falls back to Yahoo Finance's trailing P/E and TTM EPS.
+- When an individual metric is not supplied by either provider, the field is assigned `null` and displayed in the frontend as `"N/A"` rather than inventing false data.
+- Market data fetch calls are isolated via `Promise.allSettled`, ensuring that a failure or timeout on one security never breaks the remaining 25 holdings.
+
+---
+
+## Provider Symbol Mapping
+
+External providers do not adhere to standardized symbol naming:
+1. **NSE Equities**: Standard symbols are mapped to Yahoo `.NS` tickers (`HDFCBANK.NS`, `AFFLE.NS`, `DMART.NS`, `ASTRAL.NS`).
+2. **Yahoo Ticker Aliases**: Special tickers such as LTI Mindtree (`LTIM`) map to Yahoo's specific symbol `LTM.NS`.
+3. **BSE Scrip Codes**: Numeric BSE codes are translated into their respective Yahoo BSE tickers (`532174` $\rightarrow$ `ICICIBANK.BO`, `544252` $\rightarrow$ `BAJAJHFL.BO`, `542651` $\rightarrow$ `KPITTECH.BO`, `511577` $\rightarrow$ `511577.BO`).
+
+This mapping layer isolates third-party provider idiosyncrasies from the core domain model and table UI.
+
+---
+
+## Dynamic Updates and Caching
+
+- **Frontend Polling**: The React client polls `GET /api/portfolio` approximately every 15 seconds.
+- **In-Memory TTL Cache**: The backend uses an in-memory cache with a configurable Time-To-Live (default: `60000` ms / 60 seconds).
+- **Reduced Latency & Throttling**: Cached responses avoid unnecessary external provider requests and reduce backend and provider load while mitigating external IP rate-limiting.
+- **Failed Request Short-TTL**: Entries with completely failed upstream market data expire quickly (5 seconds) so transient network glitches recover promptly.
+
+---
+
+## Calculations
+
+The Calculation Service implements standard financial formulas:
+
+- **Investment**:
+  $$\text{Investment} = \text{Purchase Price} \times \text{Quantity}$$
+- **Present Value**:
+  $$\text{Present Value} = \text{CMP} \times \text{Quantity}$$
+- **Gain / Loss**:
+  $$\text{Gain / Loss} = \text{Present Value} - \text{Investment}$$
+- **Gain / Loss %**:
+  $$\text{Gain / Loss \%} = \left(\frac{\text{Gain / Loss}}{\text{Investment}}\right) \times 100$$
+- **Portfolio %**:
+  $$\text{Portfolio \%} = \left(\frac{\text{Investment}}{\text{Total Portfolio Investment}}\right) \times 100$$
+- **Sector Totals**:
+  Sum of all holdings belonging to that sector for investment, present value, and gain/loss.
+
+*If CMP is `null` (unavailable), `presentValue`, `gainLoss`, and `gainLossPercentage` cascade safely to `null`, preventing `NaN` rendering bugs in the UI.*
+
+---
+
+## API Documentation
 
 ### `GET /api/health`
-Returns a simple 200 OK status to verify the server is running.
+Health check endpoint verifying that the service is operational.
+
+**Response**:
+```json
+{
+  "status": "ok",
+  "service": "portfolio-api",
+  "timestamp": "2026-09-12T14:40:00.000Z"
+}
+```
 
 ### `GET /api/portfolio`
-The primary endpoint that returns the fully enriched portfolio data.
+Returns the enriched portfolio data, including summaries, sector aggregations, and individual holdings.
 
-**Major Response Fields**:
-- `success`: Boolean indicating if the request succeeded.
-- `data.summary`: Top-level portfolio metrics (`totalInvestment`, `totalPresentValue`, `totalGainLoss`, `totalGainLossPercentage`).
-- `data.sectors`: Array of aggregated sector data, each containing a `holdings` array.
-- `data.holdings`: Flat array of all enriched holdings.
-- `data.marketDataStatus`: High-level indicator (`success`, `partial`, `failed`) of the external provider health.
-- `data.lastUpdated`: ISO timestamp of the response generation.
-
-**Illustrative Response**:
+**Illustrative Response Structure**:
 ```json
 {
   "success": true,
   "data": {
     "summary": {
-      "totalInvestment": 4850000,
-      "totalPresentValue": 6184320,
-      "totalGainLoss": 1334320,
-      "totalGainLossPercentage": 27.51
+      "totalInvestment": 1543060,
+      "totalPresentValue": 1486497.24,
+      "totalGainLoss": -56562.76,
+      "totalGainLossPercentage": -3.67
     },
     "sectors": [
       {
-        "name": "Financials",
-        "totalInvestment": 1552000,
-        "portfolioPercentage": 32.0,
+        "name": "Technology",
+        "totalInvestment": 337820,
+        "totalPresentValue": 328900.5,
+        "gainLoss": -8919.5,
+        "gainLossPercentage": -2.64,
+        "portfolioPercentage": 21.89,
         "holdings": [ /* ... */ ]
       }
     ],
-    "holdings": [ /* ... */ ],
+    "holdings": [
+      {
+        "id": "hdfc-bank",
+        "name": "HDFC Bank",
+        "symbol": "HDFCBANK",
+        "exchange": "NSE",
+        "sector": "Financial Sector",
+        "purchasePrice": 1490,
+        "quantity": 50,
+        "investment": 74500,
+        "portfolioPercentage": 4.83,
+        "cmp": 708.25,
+        "presentValue": 35412.5,
+        "gainLoss": -39087.5,
+        "gainLossPercentage": -52.47,
+        "peRatio": 13.84,
+        "latestEarnings": 51.21,
+        "dataStatus": {
+          "yahoo": "success",
+          "google": "success"
+        }
+      }
+    ],
     "marketDataStatus": {
       "yahoo": "success",
       "google": "partial"
     },
-    "lastUpdated": "2026-09-10T17:34:00.000Z"
+    "lastUpdated": "2026-09-12T14:40:00.000Z"
   },
   "error": null
 }
 ```
 
-## 7. Portfolio Data Model
+---
 
-The static portfolio information (such as stock name, exchange, purchase price, quantity, and sector) originates from the case-study Excel sheet and is normalized into `portfolio.json`. The `EnrichedHolding` interface represents the core data model returned by the backend after combining this static data with live market metrics:
+## Local Setup
 
-- `name`: Company name (string)
-- `symbol`: Ticker symbol (string)
-- `sector`: Industry sector (string)
-- `exchange`: `NSE` or `BSE`
-- `purchasePrice`: Original buy price (number)
-- `quantity`: Number of shares (number)
-- `investment`: Total cost basis (number)
-- `portfolioPercentage`: Weight in the total portfolio (number)
-- `cmp`: Current Market Price from Yahoo Finance (number | null)
-- `presentValue`: Current total value (number | null)
-- `gainLoss`: Absolute profit or loss (number | null)
-- `gainLossPercentage`: Percentage profit or loss (number | null)
-- `peRatio`: Price-to-Earnings ratio from Google Finance (number | null)
-- `latestEarnings`: Earnings per share (EPS) from Google Finance (number | null)
+### Prerequisites
+- Node.js (v20 or newer)
+- npm (v10 or newer)
 
-## 8. Calculations
+### 1. Backend Setup
+```bash
+cd backend
+npm install
+npm run dev
+```
+The backend API server will start on `http://localhost:5000`.
 
-The backend Calculation Service implements the following formulas:
+**Backend Environment Variables** (`backend/.env` or defaults):
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `PORT` | `5000` | Port for the Express server |
+| `NODE_ENV` | `development` | Runtime environment (`development` / `production`) |
+| `FRONTEND_URL` | `http://localhost:3000` | Allowed CORS origin |
+| `MARKET_DATA_CACHE_TTL` | `60000` | Market data cache TTL in milliseconds |
+| `YAHOO_TIMEOUT` | `8000` | Outbound timeout for Yahoo Finance in milliseconds |
+| `GOOGLE_TIMEOUT` | `8000` | Outbound timeout for Google Finance in milliseconds |
 
-- **Investment** = `Purchase Price × Quantity`
-- **Present Value** = `CMP × Quantity`
-- **Gain/Loss** = `Present Value − Investment`
-- **Portfolio %** = `(Individual Investment / Total Portfolio Investment) × 100`
+### 2. Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+The Next.js client will start on `http://localhost:3000`.
 
-Sector totals are calculated by summing the `investment`, `presentValue`, and `gainLoss` of all individual holdings that belong to that specific sector.
+**Frontend Environment Variables** (`frontend/.env.local`):
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:5000` | Base URL of the backend REST API |
 
-## 9. External API Strategy
+---
 
-Neither Yahoo Finance nor Google Finance provide an official, public API intended for free high-frequency programmatic use. To satisfy the case study:
+## Testing & Verification
 
-- **Yahoo Finance** (`yahoo-finance2` library): Primary source for CMP and fallback source for P/E and EPS when Google Finance data is unavailable.
-- **Google Finance** (Custom HTML scraping): Primary source for P/E Ratio and Latest Earnings (EPS).
-- **Fallback Behavior**: If Google Finance scraping fails or returns incomplete data, Yahoo Finance provides fallback P/E/EPS values where available.
-- **Partial Failure**: If a metric cannot be found on either provider, it safely resolves to `null`, and the provider status is marked as `partial`.
+The backend test suite verifies calculations, caching mechanics, provider handling, and endpoint reliability:
 
-*Note: Because Google Finance relies on DOM scraping, structural changes to Google's HTML may affect extraction accuracy over time.*
+```bash
+# Backend Testing & Typechecking
+cd backend
+npm run test        # Runs 85 unit and integration tests across 6 test suites
+npm run typecheck   # Validates TypeScript compilation without emitting files
+npm run build       # Validates production compilation and asset copying
 
-## 10. Caching and Rate Limiting
+# Frontend Production Build
+cd ../frontend
+npm run build       # Executes Next.js static build and TypeScript type-checking
+```
 
-An in-memory TTL (Time-To-Live) cache is implemented at the Market Data Service layer.
+**Verified Test Summary**:
+- **Backend**: 6 test suites passed, 85 tests passed, 0 failures.
+- **Frontend**: Clean static optimization and build passing with 0 errors.
 
-- **Implementation**: The cache stores the `CombinedMarketData` payload per stock symbol.
-- **Configuration**: The TTL is configured via `MARKET_DATA_CACHE_TTL` in the environment variables, defaulting to `60000` ms (60 seconds).
-- **Purpose**:
-  - Reduces redundant outbound network requests.
-  - Lowers the risk of IP bans or rate-limiting by Yahoo/Google.
-  - Drastically improves backend response times.
-  - Allows the frontend to safely poll every 15 seconds for UI responsiveness without hammering external servers.
+---
 
-## 11. Error Handling
+## Deployment
 
-The application is designed to be highly fault-tolerant:
-- **Provider Failure**: Handled via `Promise.allSettled`. If Yahoo fails, Google still runs, and vice-versa.
-- **Partial Data**: Missing fields (like P/E or EPS) are explicitly typed as `number | null`. The frontend detects `null` and safely renders `"N/A"`.
-- **Missing CMP**: If CMP is unavailable, `presentValue` and `gainLoss` mathematically cascade to `null`, avoiding NaN bugs in the UI.
-- **API Failure**: If the backend completely crashes or is unreachable, the frontend displays a dedicated `ErrorState` UI block with a "Try Again" mechanism.
-- **Loading State**: A comprehensive `LoadingSkeleton` guarantees UI stability during slow network requests.
+The application is deployed on Vercel as two decoupled services:
 
-## 12. Project Structure
+- **Frontend**: [https://portfolio-dashboard-swart-zeta.vercel.app](https://portfolio-dashboard-swart-zeta.vercel.app)
+- **Backend API**: [https://portfolio-dashboard-backend-ebon.vercel.app](https://portfolio-dashboard-backend-ebon.vercel.app)
+
+The deployed frontend communicates directly with the deployed backend using the production `NEXT_PUBLIC_API_URL` environment variable configured in Vercel.
+
+---
+
+## Project Structure
 
 ```text
 8Byte/
 ├── backend/
-│   ├── api/
-│   │   └── index.ts          # Vercel serverless entry point
-│   ├── data/
-│   │   └── portfolio.json    # Normalized portfolio data from provided Excel sheet
 │   ├── src/
-│   │   ├── controllers/      # Express route handlers
-│   │   ├── providers/        # Yahoo and Google integration logic
-│   │   ├── services/         # Market data fetching and calculations
-│   │   ├── types/            # TypeScript interfaces
-│   │   └── utils/            # Cache, Logger, Math utilities
+│   │   ├── controllers/            # Express route controllers (portfolio, health)
+│   │   ├── data/
+│   │   │   └── portfolio.json      # Authoritative 26 active Excel holdings
+│   │   ├── middleware/             # Error handling, 404, request logging
+│   │   ├── providers/              # Yahoo and Google market data providers
+│   │   ├── routes/                 # Express route definitions
+│   │   ├── services/               # Market data orchestrator & calculation service
+│   │   ├── types/                  # TypeScript domain interfaces
+│   │   ├── utils/                  # Cache, Logger, Math calculation helpers
+│   │   ├── app.ts                  # Express app factory & CORS configuration
+│   │   └── server.ts               # HTTP server listener & graceful shutdown
 │   ├── package.json
 │   ├── tsconfig.json
-│   ├── vercel.json           # Vercel deployment configuration
 │   └── .env.example
 ├── frontend/
+│   ├── public/                     # Static assets & icons
 │   ├── src/
-│   │   ├── app/              # Next.js App Router (layout, page)
-│   │   ├── components/       # Reusable React components (Header, Table, Cards)
-│   │   ├── hooks/            # usePortfolio custom hook for polling
-│   │   ├── lib/              # API fetch and formatting utilities
-│   │   └── types/            # Shared interfaces mirroring backend
+│   │   ├── app/                    # Next.js App Router (layout, page)
+│   │   ├── components/             # Reusable UI components
+│   │   │   ├── DashboardHeader.tsx # Sub-header with metrics and badges
+│   │   │   ├── ErrorState.tsx      # Error fallback UI with retry button
+│   │   │   ├── Header.tsx          # Top bar with refresh controls
+│   │   │   ├── HoldingsTable.tsx   # Interactive sector-grouped holdings table
+│   │   │   ├── LoadingSkeleton.tsx # Skeleton UI for initial load
+│   │   │   ├── SectorAllocation.tsx# Recharts donut chart & sector breakdown
+│   │   │   └── SummaryCards.tsx    # High-level KPI summary cards
+│   │   ├── hooks/
+│   │   │   └── usePortfolio.ts     # Custom hook for polling and state management
+│   │   ├── lib/
+│   │   │   ├── api.ts              # Fetch wrapper with error handling
+│   │   │   └── utils.ts            # INR currency and percentage formatters
+│   │   └── types/
+│   │       └── portfolio.ts        # Client-side TypeScript interfaces
 │   ├── package.json
-│   └── .env.local
-└── README.md
+│   └── tsconfig.json
+├── TECHNICAL_DOCUMENT.md           # In-depth technical architecture document
+└── README.md                       # Root project documentation
 ```
 
-## 13. Installation
+---
 
-Ensure you have Node.js (v20+) installed. Clone the repository and install dependencies for both layers.
+## Limitations
 
-**Backend Setup**:
-```bash
-cd backend
-npm install
-```
-The backend uses default environment variables that work out of the box (`PORT=5000`, `MARKET_DATA_CACHE_TTL=60000`). If you wish to override them, copy `.env.example` to `.env`.
+1. **Unofficial API Reliance**: Yahoo Finance and Google Finance do not provide official public APIs for this use case. Upstream HTML or internal endpoint changes can alter response shapes.
+2. **Variable Security Coverage**: Smaller-cap BSE stocks may have delayed or missing metrics on third-party platforms.
+3. **Legitimate N/A Values**: Incomplete metrics are returned as `null` / `"N/A"` by design to maintain truthful reporting without inventing synthetic data.
+4. **Read-Only Scope**: The dashboard serves analytics and valuation visualization purposes; it does not execute live trading orders.
 
-**Frontend Setup**:
-```bash
-cd frontend
-npm install
-```
-Local environment files like `.env.local` are intentionally ignored by git. You should configure environment variables locally or through Vercel project settings. For local development, create a `.env.local` with `NEXT_PUBLIC_API_URL=http://localhost:5000` to connect to the backend.
+---
 
-## 14. Deployment
+## Security Considerations
 
-Both the frontend and backend are fully configured for Vercel deployment.
+- **Strict CORS Policy**: The Express backend restricts cross-origin resource sharing to the configured frontend origin (`FRONTEND_URL`).
+- **Environment Separation**: Secrets and dynamic URLs are managed exclusively via environment variables; no credentials or API keys are committed to source control.
+- **Request Timeouts**: All upstream HTTP requests are guarded with strict timeouts (`YAHOO_TIMEOUT`, `GOOGLE_TIMEOUT`) to prevent connection exhaustion.
+- **Runtime Data Validation**: Incoming portfolio JSON is validated at service startup (checking non-empty required strings, valid "NSE"/"BSE" exchange identifiers, positive finite purchase prices, positive integer quantities, and unique symbols).
+- **Graceful Error Sanitization**: Internal server errors return standardized envelope payloads with scrubbed messages, preventing internal stack trace leaks.
 
-- **Backend**: Deployable directly from the `backend` root directory. The `backend/api/index.ts` serves as the Vercel serverless entry point, while `backend/vercel.json` handles routing and explicitly includes `portfolio.json` in the bundle.
-- **Frontend**: Deployable directly from the `frontend` root directory. Ensure you set the `NEXT_PUBLIC_API_URL` environment variable in your Vercel project settings to point to your deployed backend URL.
+---
 
-## 15. Running the Application
+## Design Decisions
 
-Both the backend and frontend must be running concurrently.
-
-**Start the Backend**:
-```bash
-cd backend
-npm run dev
-```
-The REST API will be available at: `http://localhost:5000`
-
-**Start the Frontend**:
-```bash
-cd frontend
-npm run dev
-```
-The Dashboard UI will be available at: `http://localhost:3000`
-
-## 16. Testing
-
-The backend is covered by automated tests for calculation logic, caching, provider behavior, error handling, and API integration.
-
-**Run Backend Tests**:
-```bash
-cd backend
-npm test
-npm run typecheck
-npm run build
-```
-*Result*: 85 backend tests passing successfully.
-
-**Run Frontend Verification**:
-```bash
-cd frontend
-npm run build
-```
-*Result*: Clean compilation and successful static Next.js production build (Next.js automatically performs TypeScript checking during the build).
-
-## 17. Design and UX
-
-The frontend was modeled using Google Stitch and implemented accurately in React + Tailwind CSS:
-- **Single-page dashboard**: Clean, vertical layout requiring no complex navigation.
-- **Summary cards**: High-priority KPI visualization.
-- **Sector allocation**: Visual progress bar indicating portfolio weight distribution.
-- **Holdings table**: Tabular grouping by sector for dense data consumption.
-- **Visual indicators**: Text dynamically turns green (`text-emerald-600`) or red (`text-rose-600`) based on gain/loss value.
-- **Responsive layout**: Fully functional on mobile, tablet, and desktop screens.
-
-## 18. Technical Challenges and Solutions
-
-- **Unofficial Data Sources**: Handled gracefully by using `Promise.allSettled`, robust Regex string cleaning (removing `₹`, commas), and creating a multi-tiered fallback system.
-- **Rate Limiting & Performance**: Mitigated by a 60-second in-memory TTL cache. This reduces repeated external requests for cached symbols and allows 15-second frontend polling without fetching fresh provider data on every poll.
-- **Partial Data**: Solved at the TypeScript layer by strictly enforcing `number | null` across the Calculation Service and Frontend, ensuring zero runtime crashes from missing provider data.
-- **Periodic Updates**: Handled efficiently on the client via a custom `usePortfolio` React hook relying on standard `setInterval` polling with proper `useEffect` cleanup.
-
-## 19. Limitations
-
-- **Unofficial Integration**: Yahoo Finance and Google Finance integrations rely on unofficial library wrappers and direct DOM scraping. Structural updates to Google's website will break the EPS/PE extraction logic.
-- **Market Data Availability**: Niche BSE stocks or newly listed equities may not resolve accurately on external providers, leading to partial data rendering.
-- **Not for Trading**: This is strictly a read-only portfolio analytics visualization dashboard, not a high-frequency trading or execution system.
-
-## 20. Future Improvements
-
-- **WebSocket/SSE**: Replace 15-second polling with Server-Sent Events (SSE) or WebSockets for true push-based reactivity.
-- **Persistent Cache**: Upgrade the in-memory cache to Redis to maintain state across backend server restarts.
-- **Database Integration**: Migrate `portfolio.json` to a PostgreSQL or MongoDB instance to allow users to dynamically add/remove holdings.
-- **Historical Charts**: Implement Recharts or Chart.js to visualize portfolio growth over a 1Y or 5Y historical window.
-
-## 21. Disclaimer
-
-*Market data provided in this dashboard may be delayed, incomplete, or unavailable depending on the health of third-party external providers. This application is constructed strictly for demonstration and technical evaluation purposes. It does not constitute financial advice.*
+- **Separation of Portfolio Identifiers & Provider Tickers**: Preserves Excel exchange identifiers for domain purity while translating internally for third-party scrapers.
+- **Backend Aggregation vs. Direct Client Scraping**: Prevents client-side CORS blocking, hides scraping logic from the browser, and consolidates caching in one location.
+- **In-Memory TTL Caching**: Cached responses avoid unnecessary external provider requests and reduce backend and provider load during 15-second client polling without introducing external infrastructure complexity.
+- **Partial-Failure Fault Tolerance**: Uses `Promise.allSettled` so that an upstream provider failure on a single security never interrupts the valuation of the remaining portfolio.
+- **Recharts Donut Visualization**: Implements distinct, accessible color coding mapped by sector name to provide instant visual clarity on asset allocation.
