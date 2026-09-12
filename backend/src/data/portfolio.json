@@ -2,181 +2,235 @@
   {
     "id": "hdfc-bank",
     "name": "HDFC Bank",
-    "symbol": "HDFCBANK.NS",
+    "symbol": "HDFCBANK",
     "exchange": "NSE",
-    "sector": "Financials",
+    "sector": "Financial Sector",
     "purchasePrice": 1490,
     "quantity": 50
   },
   {
-    "id": "icici-bank",
-    "name": "ICICI Bank",
-    "symbol": "ICICIBANK.NS",
-    "exchange": "NSE",
-    "sector": "Financials",
-    "purchasePrice": 950,
-    "quantity": 80
-  },
-  {
     "id": "bajaj-finance",
     "name": "Bajaj Finance",
-    "symbol": "BAJFINANCE.NS",
+    "symbol": "BAJFINANCE",
     "exchange": "NSE",
-    "sector": "Financials",
-    "purchasePrice": 6800,
+    "sector": "Financial Sector",
+    "purchasePrice": 6466,
     "quantity": 15
   },
   {
-    "id": "kotak-mahindra-bank",
-    "name": "Kotak Mahindra Bank",
-    "symbol": "KOTAKBANK.NS",
-    "exchange": "NSE",
-    "sector": "Financials",
-    "purchasePrice": 1720,
-    "quantity": 40
+    "id": "icici-bank",
+    "name": "ICICI Bank",
+    "symbol": "532174",
+    "exchange": "BSE",
+    "sector": "Financial Sector",
+    "purchasePrice": 780,
+    "quantity": 84
   },
   {
-    "id": "infosys",
-    "name": "Infosys",
-    "symbol": "INFY.NS",
-    "exchange": "NSE",
-    "sector": "Technology",
-    "purchasePrice": 1420,
-    "quantity": 60
+    "id": "bajaj-housing",
+    "name": "Bajaj Housing",
+    "symbol": "544252",
+    "exchange": "BSE",
+    "sector": "Financial Sector",
+    "purchasePrice": 130,
+    "quantity": 504
   },
   {
-    "id": "tcs",
-    "name": "Tata Consultancy Services",
-    "symbol": "TCS.NS",
-    "exchange": "NSE",
-    "sector": "Technology",
-    "purchasePrice": 3600,
-    "quantity": 20
+    "id": "savani-financials",
+    "name": "Savani Financials",
+    "symbol": "511577",
+    "exchange": "BSE",
+    "sector": "Financial Sector",
+    "purchasePrice": 24,
+    "quantity": 1080
   },
   {
-    "id": "wipro",
-    "name": "Wipro",
-    "symbol": "WIPRO.NS",
+    "id": "affle-india",
+    "name": "Affle India",
+    "symbol": "AFFLE",
     "exchange": "NSE",
     "sector": "Technology",
-    "purchasePrice": 420,
-    "quantity": 150
-  },
-  {
-    "id": "hcl-technologies",
-    "name": "HCL Technologies",
-    "symbol": "HCLTECH.NS",
-    "exchange": "NSE",
-    "sector": "Technology",
-    "purchasePrice": 1250,
+    "purchasePrice": 1151,
     "quantity": 50
   },
   {
-    "id": "hindustan-unilever",
-    "name": "Hindustan Unilever",
-    "symbol": "HINDUNILVR.NS",
+    "id": "lti-mindtree",
+    "name": "LTI Mindtree",
+    "symbol": "LTIM",
     "exchange": "NSE",
-    "sector": "Consumer",
-    "purchasePrice": 2450,
-    "quantity": 30
+    "sector": "Technology",
+    "purchasePrice": 4775,
+    "quantity": 16
   },
   {
-    "id": "asian-paints",
-    "name": "Asian Paints",
-    "symbol": "ASIANPAINT.NS",
-    "exchange": "NSE",
-    "sector": "Consumer",
-    "purchasePrice": 3200,
-    "quantity": 20
+    "id": "kpit-tech",
+    "name": "KPIT Tech",
+    "symbol": "542651",
+    "exchange": "BSE",
+    "sector": "Technology",
+    "purchasePrice": 672,
+    "quantity": 61
   },
   {
-    "id": "nestle-india",
-    "name": "Nestle India",
-    "symbol": "NESTLEIND.NS",
+    "id": "tata-tech",
+    "name": "Tata Tech",
+    "symbol": "544028",
+    "exchange": "BSE",
+    "sector": "Technology",
+    "purchasePrice": 1072,
+    "quantity": 63
+  },
+  {
+    "id": "bls-e-services",
+    "name": "BLS E-Services",
+    "symbol": "544107",
+    "exchange": "BSE",
+    "sector": "Technology",
+    "purchasePrice": 232,
+    "quantity": 191
+  },
+  {
+    "id": "tanla",
+    "name": "Tanla",
+    "symbol": "532790",
+    "exchange": "BSE",
+    "sector": "Technology",
+    "purchasePrice": 1134,
+    "quantity": 45
+  },
+  {
+    "id": "dmart",
+    "name": "Dmart",
+    "symbol": "DMART",
     "exchange": "NSE",
     "sector": "Consumer",
-    "purchasePrice": 22000,
-    "quantity": 5
+    "purchasePrice": 3777,
+    "quantity": 27
+  },
+  {
+    "id": "tata-consumer",
+    "name": "Tata Consumer",
+    "symbol": "532540",
+    "exchange": "BSE",
+    "sector": "Consumer",
+    "purchasePrice": 845,
+    "quantity": 90
+  },
+  {
+    "id": "pidilite",
+    "name": "Pidilite",
+    "symbol": "500331",
+    "exchange": "BSE",
+    "sector": "Consumer",
+    "purchasePrice": 2376,
+    "quantity": 36
   },
   {
     "id": "tata-power",
     "name": "Tata Power",
-    "symbol": "TATAPOWER.NS",
-    "exchange": "NSE",
+    "symbol": "500400",
+    "exchange": "BSE",
     "sector": "Power",
-    "purchasePrice": 280,
-    "quantity": 300
+    "purchasePrice": 224,
+    "quantity": 225
   },
   {
-    "id": "ntpc",
-    "name": "NTPC",
-    "symbol": "NTPC.NS",
-    "exchange": "NSE",
+    "id": "kpi-green",
+    "name": "KPI Green",
+    "symbol": "542323",
+    "exchange": "BSE",
     "sector": "Power",
-    "purchasePrice": 210,
-    "quantity": 400
+    "purchasePrice": 875,
+    "quantity": 50
   },
   {
-    "id": "power-grid-corp",
-    "name": "Power Grid Corporation",
-    "symbol": "POWERGRID.NS",
-    "exchange": "NSE",
+    "id": "suzlon",
+    "name": "Suzlon",
+    "symbol": "532667",
+    "exchange": "BSE",
     "sector": "Power",
-    "purchasePrice": 240,
-    "quantity": 250
+    "purchasePrice": 44,
+    "quantity": 450
   },
   {
-    "id": "supreme-industries",
-    "name": "Supreme Industries",
-    "symbol": "SUPREMEIND.NS",
-    "exchange": "NSE",
-    "sector": "Pipe",
-    "purchasePrice": 4200,
-    "quantity": 15
+    "id": "gensol",
+    "name": "Gensol",
+    "symbol": "542851",
+    "exchange": "BSE",
+    "sector": "Power",
+    "purchasePrice": 998,
+    "quantity": 45
+  },
+  {
+    "id": "hariom-pipes",
+    "name": "Hariom Pipes",
+    "symbol": "543517",
+    "exchange": "BSE",
+    "sector": "Pipe Sector",
+    "purchasePrice": 580,
+    "quantity": 60
   },
   {
     "id": "astral",
     "name": "Astral",
-    "symbol": "ASTRAL.NS",
+    "symbol": "ASTRAL",
     "exchange": "NSE",
-    "sector": "Pipe",
-    "purchasePrice": 2100,
-    "quantity": 25
+    "sector": "Pipe Sector",
+    "purchasePrice": 1517,
+    "quantity": 56
   },
   {
-    "id": "finolex-industries",
-    "name": "Finolex Industries",
-    "symbol": "FINPIPE.NS",
-    "exchange": "NSE",
-    "sector": "Pipe",
-    "purchasePrice": 220,
-    "quantity": 200
+    "id": "polycab",
+    "name": "Polycab",
+    "symbol": "542652",
+    "exchange": "BSE",
+    "sector": "Pipe Sector",
+    "purchasePrice": 2818,
+    "quantity": 28
   },
   {
-    "id": "reliance-industries",
-    "name": "Reliance Industries",
-    "symbol": "RELIANCE.NS",
-    "exchange": "NSE",
+    "id": "clean-science",
+    "name": "Clean Science",
+    "symbol": "543318",
+    "exchange": "BSE",
     "sector": "Others",
-    "purchasePrice": 2650,
-    "quantity": 30
+    "purchasePrice": 1610,
+    "quantity": 32
   },
   {
-    "id": "larsen-toubro",
-    "name": "Larsen & Toubro",
-    "symbol": "LT.NS",
-    "exchange": "NSE",
+    "id": "deepak-nitrite",
+    "name": "Deepak Nitrite",
+    "symbol": "506401",
+    "exchange": "BSE",
     "sector": "Others",
-    "purchasePrice": 2800,
-    "quantity": 25
+    "purchasePrice": 2248,
+    "quantity": 27
   },
   {
-    "id": "adani-enterprises",
-    "name": "Adani Enterprises",
-    "symbol": "ADANIENT.NS",
-    "exchange": "NSE",
+    "id": "fine-organic",
+    "name": "Fine Organic",
+    "symbol": "541557",
+    "exchange": "BSE",
     "sector": "Others",
-    "purchasePrice": 2400,
-    "quantity": 20
+    "purchasePrice": 4284,
+    "quantity": 16
+  },
+  {
+    "id": "gravita",
+    "name": "Gravita",
+    "symbol": "533282",
+    "exchange": "BSE",
+    "sector": "Others",
+    "purchasePrice": 2037,
+    "quantity": 8
+  },
+  {
+    "id": "sbi-life",
+    "name": "SBI Life",
+    "symbol": "540719",
+    "exchange": "BSE",
+    "sector": "Others",
+    "purchasePrice": 1197,
+    "quantity": 49
   }
 ]

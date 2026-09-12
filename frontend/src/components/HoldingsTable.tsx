@@ -8,16 +8,18 @@ interface HoldingsTableProps {
 }
 
 const SECTOR_COLORS: Record<string, string> = {
-  "Financials": "bg-blue-600",
-  "Technology": "bg-indigo-500",
-  "Consumer": "bg-teal-500",
-  "Power": "bg-amber-500",
-  "Pipe": "bg-sky-500",
-  "Others": "bg-slate-400",
+  "Technology": "bg-blue-600",
+  "Financial Sector": "bg-violet-600",
+  "Financials": "bg-violet-600",
+  "Consumer": "bg-teal-600",
+  "Power": "bg-orange-500",
+  "Pipe Sector": "bg-green-600",
+  "Pipe": "bg-green-600",
+  "Others": "bg-slate-500",
 };
 
 function getSectorColor(sectorName: string): string {
-  return SECTOR_COLORS[sectorName] || "bg-slate-400";
+  return SECTOR_COLORS[sectorName] || "bg-slate-500";
 }
 
 function HoldingRow({ holding, maxInvestment }: { holding: EnrichedHolding, maxInvestment: number }) {
@@ -30,7 +32,7 @@ function HoldingRow({ holding, maxInvestment }: { holding: EnrichedHolding, maxI
     <tr className="hover:bg-slate-50/60 transition-colors">
       <td className="py-3.5 pl-6 pr-4">
         <div className="font-semibold text-slate-900 text-sm">{holding.name}</div>
-        <div className="text-[11px] text-slate-500">{holding.symbol.replace('.NS', '').replace('.BO', '')}</div>
+        <div className="text-[11px] text-slate-500">{holding.symbol}</div>
       </td>
       <td className="py-3.5 px-3 text-center">
         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">

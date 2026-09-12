@@ -38,6 +38,58 @@ function deriveOverallStatus(
   return "partial";
 }
 
+const PROVIDER_SYMBOL_MAP: Record<string, string> = {
+  // NSE symbols
+  "HDFCBANK": "HDFCBANK.NS",
+  "BAJFINANCE": "BAJFINANCE.NS",
+  "AFFLE": "AFFLE.NS",
+  "LTIM": "LTM.NS", // Yahoo Finance ticker override
+  "DMART": "DMART.NS",
+  "ASTRAL": "ASTRAL.NS",
+
+  // BSE scrip codes -> Yahoo BSE tickers
+  "532174": "ICICIBANK.BO",   // ICICI Bank
+  "544252": "BAJAJHFL.BO",    // Bajaj Housing
+  "511577": "511577.BO",      // Savani Financials
+  "542651": "KPITTECH.BO",    // KPIT Tech
+  "544028": "TATATECH.BO",    // Tata Tech
+  "544107": "BLSE.BO",        // BLS E-Services
+  "532790": "TANLA.BO",       // Tanla
+  "532540": "TATACONSUM.BO",  // Tata Consumer
+  "500331": "PIDILITIND.BO",  // Pidilite
+  "500400": "TATAPOWER.BO",   // Tata Power
+  "542323": "KPIGREEN.BO",    // KPI Green
+  "532667": "SUZLON.BO",      // Suzlon
+  "542851": "GENSOL.BO",      // Gensol
+  "543517": "HARIOMPIPE.BO",  // Hariom Pipes
+  "542652": "POLYCAB.BO",     // Polycab
+  "543318": "CLEAN.BO",       // Clean Science
+  "506401": "DEEPAKNTR.BO",   // Deepak Nitrite
+  "541557": "FINEORG.BO",     // Fine Organic
+  "533282": "GRAVITA.BO",     // Gravita
+  "540719": "SBILIFE.BO",     // SBI Life
+
+  // Backward compatibility overrides
+  "LTIM.NS": "LTM.NS",
+  "SAVANIFIN.NS": "511577.BO",
+};
+
+/**
+ * Translate a portfolio/exchange identifier into its provider-specific ticker.
+ */
+export function resolveProviderSymbol(symbol: string): string {
+  if (PROVIDER_SYMBOL_MAP[symbol]) {
+    return PROVIDER_SYMBOL_MAP[symbol];
+  }
+  if (symbol.endsWith(".NS") || symbol.endsWith(".BO")) {
+    return symbol;
+  }
+  if (/^\d+$/.test(symbol)) {
+    return `${symbol}.BO`;
+  }
+  return `${symbol}.NS`;
+}
+
 /**
  * Fetch combined market data for a single symbol.
  * - Checks cache first.
@@ -46,6 +98,7 @@ function deriveOverallStatus(
  * - Caches the merged result.
  */
 export async function getMarketData(symbol: string): Promise<CombinedMarketData> {
+  const providerSymbol = resolveProviderSymbol(symbol);
   const cacheKey = `${CACHE_KEY_PREFIX}${symbol}`;
 
   // ─── Cache hit ──────────────────────────────────────────────────────────────
@@ -55,13 +108,13 @@ export async function getMarketData(symbol: string): Promise<CombinedMarketData>
     return cached;
   }
 
-  logger.debug(`Cache miss for ${symbol} — fetching from providers`, CONTEXT);
+  logger.debug(`Cache miss for ${symbol} (provider symbol: ${providerSymbol}) — fetching from providers`, CONTEXT);
 
   // ─── Concurrent provider fetch ──────────────────────────────────────────────
   // Promise.allSettled: one provider failure does not cancel the other
   const [yahooResult, googleResult] = await Promise.allSettled([
-    yahooProvider.getMarketData(symbol),
-    googleProvider.getMarketData(symbol),
+    yahooProvider.getMarketData(providerSymbol),
+    googleProvider.getMarketData(providerSymbol),
   ]);
 
   const lastUpdated = new Date().toISOString();
